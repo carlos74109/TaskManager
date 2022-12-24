@@ -41,7 +41,7 @@ public class ProjetoController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/criar")// criar o projeto
-    public void criarPjeto(@RequestBody ProjetoDTO projetoDTO){
+    public ResponseEntity criarPjeto(@RequestBody ProjetoDTO projetoDTO){
         Time time = timeRepository.findById(0l).get();
         Projeto projeto = new Projeto();
         projeto.salvarProjetoDto(projetoDTO);
@@ -50,6 +50,7 @@ public class ProjetoController {
             projeto.setTimeProjeto(time);
         }
         projetoRepository.save(projeto);
+        return new ResponseEntity(HttpStatus.OK);
     }
 
     @GetMapping("/listas")
@@ -65,80 +66,72 @@ public class ProjetoController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/alocar/time/{idTime}/{idProjeto}")//alocar time ao projeto
-    public void alocarTime(@PathVariable Long idTime, @PathVariable Long idProjeto){
+    public ResponseEntity alocarTime(@PathVariable Long idTime, @PathVariable Long idProjeto){
 
-        if(timeRepository.findById(idProjeto).isEmpty()){
-            throw new Error("Usuario inexistente");
-        }
-
-        if(projetoRepository.findById(idProjeto).isEmpty()){
-            throw new Error("Projeto inexistente");
-        }
-
-        Time time = timeRepository.findById(idTime).get();
-        Projeto projeto = projetoRepository.findById(idProjeto).get();
-        projeto.setTimeProjeto(time);
-        projetoRepository.save(projeto);
-
+       if(timeRepository.findById(idTime).get() == null || projetoRepository.findById(idProjeto).get() == null){
+           return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+       }else {
+           Time time = timeRepository.findById(idTime).get();
+           Projeto projeto = projetoRepository.findById(idProjeto).get();
+           projeto.setTimeProjeto(time);
+           projetoRepository.save(projeto);
+           return new ResponseEntity(HttpStatus.OK);
+       }
     }
 
     @PreAuthorize("hasRole('ROLE_GESTOR')")
     @Transactional
     @PostMapping("/tarefa/adicionar/{idProjeto}/{idTarefa}/{idMembro}")//adicionar tarefa ao usuario
-    public void editarProjeto (@PathVariable Long idProjeto, @PathVariable Long idTarefa, @PathVariable Long idMembro){
+    public ResponseEntity editarProjeto (@PathVariable Long idProjeto, @PathVariable Long idTarefa, @PathVariable Long idMembro){
 
-        if (projetoRepository.findById(idProjeto).isEmpty()){
-            throw new Error("Projeto inexistente");
+        if(projetoRepository.findById(idProjeto).get() == null || tarefasRepository.findById(idTarefa).get() == null || usuarioRepository.findById(idProjeto).get() == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else{
+            Projeto projeto = projetoRepository.findById(idProjeto).get();
+            Tarefas tarefa = tarefasRepository.findById(idTarefa).get();
+            Usuario usuario = usuarioRepository.findById(idMembro).get();
+
+            tarefa.setUsuarioTimeTarefa(usuario);
+            projeto.getTarefasProjeto().add(tarefa);
+            projetoRepository.save(projeto);
+            return new ResponseEntity(HttpStatus.OK);
         }
-        if(tarefasRepository.findById(idTarefa).isEmpty()){
-            throw new Error("Tarefas inexistente");
-        }
-        if(usuarioRepository.findById(idProjeto).isEmpty()){
-            throw new Error("Usuario inexistente");
-        }
-
-        Projeto projeto = projetoRepository.findById(idProjeto).get();
-        Tarefas tarefa = tarefasRepository.findById(idTarefa).get();
-        Usuario usuario = usuarioRepository.findById(idMembro).get();
-
-        tarefa.setUsuarioTimeTarefa(usuario);
-        projeto.getTarefasProjeto().add(tarefa);
-        projetoRepository.save(projeto);
-
     }
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
     @Transactional
     @PostMapping("/editar/{idProjeto}")//Editar atributos de projeto
-    public void editarProjeto(@PathVariable Long idProjeto, @RequestBody EditarProjetoDto editarProjetoDto){
+    public ResponseEntity editarProjeto(@PathVariable Long idProjeto, @RequestBody EditarProjetoDto editarProjetoDto){
 
-        if(projetoRepository.findById(idProjeto).isEmpty()){
-            throw new Error("Projeto inexistente");
+        if(projetoRepository.findById(idProjeto) == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else {
+            Projeto projeto = projetoRepository.findById(idProjeto).get();
+            projeto.converterEditarDto(editarProjetoDto);
+            projetoRepository.save(projeto);
+            return new ResponseEntity(HttpStatus.OK);
         }
-
-        Projeto projeto = projetoRepository.findById(idProjeto).get();
-        projeto.converterEditarDto(editarProjetoDto);
-        projetoRepository.save(projeto);
 
     }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/deleta/{idProjeto}")//Deleta Projeto
-    public void removerProjeto(@PathVariable Long idProjeto){
+    public ResponseEntity removerProjeto(@PathVariable Long idProjeto){
 
         if (projetoRepository.findById(idProjeto).isEmpty()){
             throw new Error("Projeto inexistente");
         }
 
-        Projeto projeto = projetoRepository.findById(idProjeto).get();
-        System.out.println(projeto);
-
-        if(projeto.getTarefasProjeto().isEmpty() && projeto.getTimeProjeto() == null || projeto.getTimeProjeto().getIdTime() == 0){
-            projetoRepository.delete(projeto);
-            System.out.println(("Removido com sucesso"));
+        if(projetoRepository.findById(idProjeto).get() == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }else {
-            throw new Error("O projeto tem time alocado ou alguna tarefa não removida");
+            Projeto projeto = projetoRepository.findById(idProjeto).get();
+            if(projeto.getTarefasProjeto().isEmpty() && projeto.getTimeProjeto() == null || projeto.getTimeProjeto().getIdTime() == 0){
+                projetoRepository.delete(projeto);
+                return new ResponseEntity(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-
 
     }
 

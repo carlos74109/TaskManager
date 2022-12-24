@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -32,20 +34,21 @@ public class TarefaController {
 
     @PreAuthorize("hasRole('ROLE_GESTOR')")
     @PostMapping("/criar/{idProjeto}")//criar tarefas
-    public void criarTarefas(@RequestBody TarefasDTO tarefasDTO, @PathVariable Long idProjeto){
+    public ResponseEntity criarTarefas(@RequestBody TarefasDTO tarefasDTO, @PathVariable Long idProjeto){
 
         if(projetoRepository.findById(idProjeto).isEmpty()){
-            throw new Error("Projeto inexistente");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else {
+            Projeto projeto = projetoRepository.findById(idProjeto).get();
+
+            Tarefas tarefa = new Tarefas();
+            tarefa.criarTarefaDto(tarefasDTO);
+            tarefa.setProjeto_id(projeto);
+            tarefasRepository.save(tarefa);
+            return new ResponseEntity(HttpStatus.OK);
         }
-
-        Projeto projeto = projetoRepository.findById(idProjeto).get();
-
-        Tarefas tarefa = new Tarefas();
-        tarefa.criarTarefaDto(tarefasDTO);
-        tarefa.setProjeto_id(projeto);
-        tarefasRepository.save(tarefa);
-
     }
+
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
     @GetMapping("/listas/projetos/{idProjeto}")//trazer todas as tarefas de um determinado Projeto
     public Page<Tarefas> listasTarefas(@PageableDefault(size = 10) Pageable paginacao, @PathVariable Long idProjeto){
@@ -56,7 +59,7 @@ public class TarefaController {
         Page<Tarefas> listasTarefa = tarefasRepository.findByProjeto(idProjeto, paginacao);
         return listasTarefa;
     }
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
+    @PreAuthorize("hasRole('ROLE_GESTOR')")
     @GetMapping("/listas/projetos/null/{idProjeto}")//trazer todas as tarefas de um determinado Projeto onde o usuario é null
     public Page<Tarefas> listasTarefasUsuarioNull(@PageableDefault(size = 10) Pageable paginacao, @PathVariable Long idProjeto){
         if(projetoRepository.findById(idProjeto).isEmpty()){
@@ -75,26 +78,47 @@ public class TarefaController {
     @PreAuthorize("hasRole('ROLE_GESTOR')")
     @Transactional
     @PostMapping("/usuario/{idUsuario}/{idTarefa}")//encontrar o usuario e adicionar a tarefa
-    public void addTarefaParaUsuario(@PathVariable Long idUsuario, @PathVariable Long idTarefa){
-        Usuario usuario = usuarioRepository.findById(idUsuario).get();
-        Tarefas tarefas = tarefasRepository.findById(idTarefa).get();
+    public ResponseEntity addTarefaParaUsuario(@PathVariable Long idUsuario, @PathVariable Long idTarefa){
 
-        usuario.getListasTarefas().add(tarefas);
-        usuarioRepository.save(usuario);
+        if(usuarioRepository.findById(idUsuario).get() == null || tarefasRepository.findById(idTarefa).get()== null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else {
+            Usuario usuario = usuarioRepository.findById(idUsuario).get();
+            Tarefas tarefas = tarefasRepository.findById(idTarefa).get();
+
+            usuario.getListasTarefas().add(tarefas);
+            usuarioRepository.save(usuario);
+            return new ResponseEntity(HttpStatus.OK);
+        }
     }
-    @PreAuthorize("hasRole('ROLE_COMUM)")
+
+    @PreAuthorize("hasRole('ROLE_GESTOR')")
     @Transactional
     @PostMapping("/editar/{idTarefas}")// editar os atributos das tarefas
-    public void editarTarefa(@PathVariable Long idTarefas, @RequestBody EditarTarefaDto editarTarefaDto){
-        Tarefas tarefas = tarefasRepository.findById(idTarefas).get();
-        tarefas.converterEditarTarefaDto(editarTarefaDto);
-        tarefasRepository.save(tarefas);
+    public ResponseEntity editarTarefa(@PathVariable Long idTarefas, @RequestBody EditarTarefaDto editarTarefaDto){
+
+        if(tarefasRepository.findById(idTarefas).get() == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else {
+            Tarefas tarefas = tarefasRepository.findById(idTarefas).get();
+            tarefas.converterEditarTarefaDto(editarTarefaDto);
+            tarefasRepository.save(tarefas);
+            return new ResponseEntity(HttpStatus.OK);
+        }
+
+
     }
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
     @PostMapping("/deletar/{id}")//deleta tarefa
-    public void deletaTarefa (@PathVariable Long idTarefa){
-        Tarefas tarefa = tarefasRepository.findById(idTarefa).get();
-        tarefasRepository.delete(tarefa);
+    public ResponseEntity deletaTarefa (@PathVariable Long idTarefa){
+
+        if(tarefasRepository.findById(idTarefa).get() == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else {
+            Tarefas tarefa = tarefasRepository.findById(idTarefa).get();
+            tarefasRepository.delete(tarefa);
+            return new ResponseEntity(HttpStatus.OK);
+        }
     }
 
 }

@@ -13,13 +13,14 @@ import com.manager.TaskManagement.repository.RolesRepository;
 import com.manager.TaskManagement.repository.TarefasRepository;
 import com.manager.TaskManagement.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -43,18 +44,25 @@ public class UsuarioController {
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR', 'ROLE_COMUM')")
+    @Transactional
     @PostMapping("/criar")//criar usuario
-    public void criarUsuario(@RequestBody UsuarioDTO usuarioDTO){
+    public ResponseEntity criarUsuario(@RequestBody UsuarioDTO usuarioDTO){
         Usuario usuario = new Usuario();
         Usuario emailExiste = usuarioRepository.findByEmail(usuarioDTO.email());
 
         if(emailExiste != null){
-           throw new Error("Email já existe");
-        }
+          return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else {
+            Roles roles = rolesRepository.findById(4l).get();
+            usuario.atualizarDto(usuarioDTO);
 
-        usuario.atualizarDto(usuarioDTO);
-        usuario.setSenha(criptografia().encode(usuario.getSenha()));
-        usuarioRepository.save(usuario);
+            usuario.setSenha(criptografia().encode(usuario.getSenha()));
+            usuario.getRoles().add(roles);
+
+            usuarioRepository.save(usuario);
+
+            return new ResponseEntity(HttpStatus.OK);
+        }
     }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/listas/{status}")// pesquisar usuarios de acordo com os status do usuario
@@ -78,40 +86,63 @@ public class UsuarioController {
 
     @Transactional
     @PostMapping("/editar/{idUsuario}")//editar Usuario
-    public void editarUsuario(@PathVariable Long idUsuario, @RequestBody EditarUsuarioDto editarUsuarioDto){
+    public ResponseEntity editarUsuario(@PathVariable Long idUsuario, @RequestBody EditarUsuarioDto editarUsuarioDto){
 
-        Usuario usuario = usuarioRepository.findById(idUsuario).get();
-        usuario.converterEditarUsuarioDto(editarUsuarioDto);
-        usuarioRepository.save(usuario);
-
+        if(usuarioRepository.findById(idUsuario).get() == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else {
+            Usuario usuario = usuarioRepository.findById(idUsuario).get();
+            usuario.converterEditarUsuarioDto(editarUsuarioDto);
+            usuarioRepository.save(usuario);
+            return new ResponseEntity(HttpStatus.OK);
+        }
 
     }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/delete/{idUsuario}")
-    public void deletarUsuario(@PathVariable Long idUsuario){
-        Usuario usuario = usuarioRepository.findById(idUsuario).get();
+    public ResponseEntity deletarUsuario(@PathVariable Long idUsuario){// deletar usuario
 
-        if(usuario.getListasTarefas().isEmpty() && usuario.getUsuarioTimes().isEmpty()){
-            usuarioRepository.delete(usuario);
+
+        if(usuarioRepository.findById(idUsuario).get() == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }else {
-            throw new Error("Usuario pertence a algum time ou tarefa");
+            Usuario usuario = usuarioRepository.findById(idUsuario).get();
+            usuarioRepository.delete(usuario);
+            return new ResponseEntity(HttpStatus.OK);
         }
     }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/teste/{idUsuario}/{idRoles}")//Editar função do usuario
-    public void editarPapelUsuario(@PathVariable Long idUsuario, @PathVariable Long idRoles , @RequestBody EditarUsuarioDto editarUsuarioDto){
+    public ResponseEntity editarPapelUsuario(@PathVariable Long idUsuario, @PathVariable Long idRoles){
 
-        Usuario usuario = usuarioRepository.findById(idUsuario).get();
-        usuario.getRoles().clear();
-        usuarioRepository.save(usuario);
+        if(usuarioRepository.findById(idUsuario).get() == null || rolesRepository.findById(idRoles).get() == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else {
+            Usuario usuario = usuarioRepository.findById(idUsuario).get();
+            usuario.getRoles().clear();
+            usuarioRepository.save(usuario);
 
-        Roles roles = rolesRepository.findById(idRoles).get();
-        usuario.getRoles().add(roles);
+            Roles roles = rolesRepository.findById(idRoles).get();
+            usuario.getRoles().add(roles);
 
-        usuarioRepository.save(usuario);
+            usuarioRepository.save(usuario);
+            return new ResponseEntity(HttpStatus.OK);
+        }
     }
+
+//    public void criarUsuarioAdminMaster(Long idUsuario, @RequestBody UsuarioDTO usuarioDTO){
+//        Roles role = rolesRepository.findById(1l).get();
+//
+//        Usuario usuario = new Usuario();
+//        Usuario emailExiste = usuarioRepository.findByEmail(usuarioDTO.email());
+//
+//        usuario.atualizarDto(usuarioDTO);
+//        usuario.setSenha(criptografia().encode(usuario.getSenha()));
+//        usuarioRepository.save(usuario);
+//
+//    }
 
 //    @GetMapping("/home/{idUsuario}")
 //    public List<Object> usuario(@PathVariable Long idUsuario){

@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,6 +27,7 @@ public class Usuario implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idMembro;
     private String nomeUsuario;
+    @Column(unique=true)
     private String email;
     private String senha;
     @Enumerated(EnumType.STRING)
@@ -38,7 +40,7 @@ public class Usuario implements UserDetails {
     @ManyToMany
     @JoinTable(name = "usuario_roles", joinColumns = @JoinColumn(name = "usuario_id"),
     inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Roles> roles;
+    private Set<Roles> roles = new HashSet<>();
 
     @OneToMany(mappedBy = "usuarioTimeTarefa")
     private List<Tarefas> listasTarefas;

@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -32,44 +34,44 @@ public class TimeController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/criar")// criar o time
-    public void criarTime(@RequestBody TimeDTO timeDTO){
+    public ResponseEntity criarTime(@RequestBody TimeDTO timeDTO){
         Time time = new Time();
         time.salvarTime(timeDTO);
         timeRepository.save(time);
-
-    }
-    @GetMapping("/lista/membros")//procurar todos os membros de todos os times
-    public Page<TimeDTO> membrosDisponiveis(@PageableDefault(size=10) Pageable paginacao){
-        return timeRepository.findAll(paginacao).map(TimeDTO::new);
+        return new ResponseEntity(HttpStatus.OK);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/alocar/{idUsuario}/{idTime}")//alocar usuario no time
-    public void salvarUsuarioETime(@PathVariable Long idUsuario, @PathVariable Long idTime){
-        Usuario usuario = usuarioRepository.findById(idUsuario).get();
-        Time time = timeRepository.findById(idTime).get();
+    public ResponseEntity salvarUsuarioETime(@PathVariable Long idUsuario, @PathVariable Long idTime){
 
-        time.getTimesUsuarios().add(usuario);
+        if(usuarioRepository.findById(idUsuario).get() == null || timeRepository.findById(idTime).get() == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else {
+            Usuario usuario = usuarioRepository.findById(idUsuario).get();
+            Time time = timeRepository.findById(idTime).get();
 
-        timeRepository.save(time);
+            time.getTimesUsuarios().add(usuario);
 
+            timeRepository.save(time);
+            return new ResponseEntity(HttpStatus.OK);
+        }
     }
-    @PreAuthorize("hasRole('ROLE_ADMIN)")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/remover/usuario/time/{idUsuario}/{idTime}")//removendo o usuario daquele time
-    public void removerUsuarioDoTime(@PathVariable Long idUsuario, @PathVariable Long idTime){
-        Usuario usuario = usuarioRepository.findById(idUsuario).get();
-        Time time = timeRepository.findById(idTime).get();
+    public ResponseEntity removerUsuarioDoTime(@PathVariable Long idUsuario, @PathVariable Long idTime){
 
-        if(usuario.getListasTarefas().isEmpty()){
-            time.getTimesUsuarios().remove(usuario);
-            timeRepository.save(time);
-        }else {
-            System.out.println("Retire todas as atividades do usuario antes de remove-lo");
-        }
-
-
+       if(usuarioRepository.findById(idUsuario).get() == null || timeRepository.findById(idTime).get() == null){
+           return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+       }else {
+           Usuario usuario = usuarioRepository.findById(idUsuario).get();
+           Time time = timeRepository.findById(idTime).get();
+           time.getTimesUsuarios().remove(usuario);
+           timeRepository.save(time);
+           return new ResponseEntity(HttpStatus.OK);
+       }
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
@@ -78,25 +80,25 @@ public class TimeController {
         Time time = timeRepository.findById(idTime).get();
 
         return time.getTimesUsuarios().stream().map(UsuarioDTO::new).collect(Collectors.toList());
-
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/deleta/{idTime}")//remover o time
-    public void deletaTime(@PathVariable Long idTime){
+    public ResponseEntity deletaTime(@PathVariable Long idTime){
         Time time = timeRepository.findById(idTime).get();
 
-        if(time.getTimesUsuarios().isEmpty() && time.getTimeListProjetos().isEmpty()){
-            timeRepository.delete(time);
+        if(timeRepository.findById(idTime).get() == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }else {
-            System.out.println("Retire o time do projeto e remova todos os usuarios");
+            if(time.getTimesUsuarios().isEmpty() && time.getTimeListProjetos().isEmpty()){
+                timeRepository.delete(time);
+                return new ResponseEntity(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
         }
 
     }
 
-    @GetMapping("/listas")
-    public List<consultaTimeAndProjetoDto> listasTime(){
-        return timeRepository.findTimeUsuario().stream().map(consultaTimeAndProjetoDto::new).collect(Collectors.toList());
-    }
 }
