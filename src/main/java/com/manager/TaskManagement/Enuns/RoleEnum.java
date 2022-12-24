@@ -4,6 +4,7 @@ public enum RoleEnum {
 
     ROLE_ADMIN,
     ROLE_GESTOR,
-    ROLE_COMUM
+    ROLE_COMUM,
+    ROLE_NOVO
 
 }
