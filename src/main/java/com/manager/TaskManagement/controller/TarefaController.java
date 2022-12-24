@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,8 @@ public class TarefaController {
     UsuarioRepository usuarioRepository;
     @Autowired
     ProjetoRepository projetoRepository;
+
+    @PreAuthorize("hasRole('ROLE_GESTOR')")
     @PostMapping("/criar/{idProjeto}")//criar tarefas
     public void criarTarefas(@RequestBody TarefasDTO tarefasDTO, @PathVariable Long idProjeto){
 
@@ -43,6 +46,7 @@ public class TarefaController {
         tarefasRepository.save(tarefa);
 
     }
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
     @GetMapping("/listas/projetos/{idProjeto}")//trazer todas as tarefas de um determinado Projeto
     public Page<Tarefas> listasTarefas(@PageableDefault(size = 10) Pageable paginacao, @PathVariable Long idProjeto){
         if(projetoRepository.findById(idProjeto).isEmpty()){
@@ -52,7 +56,7 @@ public class TarefaController {
         Page<Tarefas> listasTarefa = tarefasRepository.findByProjeto(idProjeto, paginacao);
         return listasTarefa;
     }
-
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
     @GetMapping("/listas/projetos/null/{idProjeto}")//trazer todas as tarefas de um determinado Projeto onde o usuario é null
     public Page<Tarefas> listasTarefasUsuarioNull(@PageableDefault(size = 10) Pageable paginacao, @PathVariable Long idProjeto){
         if(projetoRepository.findById(idProjeto).isEmpty()){
@@ -62,13 +66,13 @@ public class TarefaController {
         Page<Tarefas> listasTarefa = tarefasRepository.findByProjetoComUsuarioNull(idProjeto, paginacao);
         return listasTarefa;
     }
-
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
     @GetMapping("/listas/usuario/{idUsuario}")//encontrar todas as tarefas de um determinado Usuario
     public Page<Tarefas> listasDeTarefaUsurario(@PageableDefault(size = 10) Pageable paginacao, @PathVariable Long idUsuario){
 
         return tarefasRepository.findByTarefaUsuario(idUsuario, paginacao);
     }
-
+    @PreAuthorize("hasRole('ROLE_GESTOR')")
     @Transactional
     @PostMapping("/usuario/{idUsuario}/{idTarefa}")//encontrar o usuario e adicionar a tarefa
     public void addTarefaParaUsuario(@PathVariable Long idUsuario, @PathVariable Long idTarefa){
@@ -78,7 +82,7 @@ public class TarefaController {
         usuario.getListasTarefas().add(tarefas);
         usuarioRepository.save(usuario);
     }
-
+    @PreAuthorize("hasRole('ROLE_COMUM)")
     @Transactional
     @PostMapping("/editar/{idTarefas}")// editar os atributos das tarefas
     public void editarTarefa(@PathVariable Long idTarefas, @RequestBody EditarTarefaDto editarTarefaDto){
@@ -86,7 +90,7 @@ public class TarefaController {
         tarefas.converterEditarTarefaDto(editarTarefaDto);
         tarefasRepository.save(tarefas);
     }
-
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
     @PostMapping("/deletar/{id}")//deleta tarefa
     public void deletaTarefa (@PathVariable Long idTarefa){
         Tarefas tarefa = tarefasRepository.findById(idTarefa).get();

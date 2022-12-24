@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +39,7 @@ public class ProjetoController {
     @Autowired
     TimeRepository timeRepository;
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/criar")// criar o projeto
     public void criarPjeto(@RequestBody ProjetoDTO projetoDTO){
         Time time = timeRepository.findById(0l).get();
@@ -60,6 +62,7 @@ public class ProjetoController {
         return projetoRepository.findAll();
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/alocar/time/{idTime}/{idProjeto}")//alocar time ao projeto
     public void alocarTime(@PathVariable Long idTime, @PathVariable Long idProjeto){
@@ -79,6 +82,7 @@ public class ProjetoController {
 
     }
 
+    @PreAuthorize("hasRole('ROLE_GESTOR')")
     @Transactional
     @PostMapping("/tarefa/adicionar/{idProjeto}/{idTarefa}/{idMembro}")//adicionar tarefa ao usuario
     public void editarProjeto (@PathVariable Long idProjeto, @PathVariable Long idTarefa, @PathVariable Long idMembro){
@@ -102,6 +106,7 @@ public class ProjetoController {
         projetoRepository.save(projeto);
 
     }
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/editar/{idProjeto}")//Editar atributos de projeto
     public void editarProjeto(@PathVariable Long idProjeto, @RequestBody EditarProjetoDto editarProjetoDto){
@@ -115,6 +120,7 @@ public class ProjetoController {
         projetoRepository.save(projeto);
 
     }
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/deleta/{idProjeto}")//Deleta Projeto
     public void removerProjeto(@PathVariable Long idProjeto){
