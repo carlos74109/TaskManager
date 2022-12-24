@@ -6,11 +6,14 @@ import com.manager.TaskManagement.dto.DtoEditar.EditarUsuarioDto;
 import com.manager.TaskManagement.dto.UsuarioConsultaDTO;
 import com.manager.TaskManagement.dto.UsuarioDTO;
 
+import com.manager.TaskManagement.models.Roles;
 import com.manager.TaskManagement.models.Usuario;
 import com.manager.TaskManagement.repository.ProjetoRepository;
+import com.manager.TaskManagement.repository.RolesRepository;
 import com.manager.TaskManagement.repository.TarefasRepository;
 import com.manager.TaskManagement.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -32,10 +35,14 @@ public class UsuarioController {
     @Autowired
     TarefasRepository tarefasRepository;
 
+    @Autowired
+    RolesRepository rolesRepository;
+
     BCryptPasswordEncoder criptografia (){
         return new BCryptPasswordEncoder();
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR', 'ROLE_COMUM')")
     @PostMapping("/criar")//criar usuario
     public void criarUsuario(@RequestBody UsuarioDTO usuarioDTO){
         Usuario usuario = new Usuario();
@@ -49,6 +56,7 @@ public class UsuarioController {
         usuario.setSenha(criptografia().encode(usuario.getSenha()));
         usuarioRepository.save(usuario);
     }
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/listas/{status}")// pesquisar usuarios de acordo com os status do usuario
     public List<UsuarioConsultaDTO> listasDeMembros(@PathVariable String status){
         List<UsuarioConsultaDTO> membros = null;
@@ -69,7 +77,7 @@ public class UsuarioController {
     }
 
     @Transactional
-    @PostMapping("/editar/{idUsuario}")
+    @PostMapping("/editar/{idUsuario}")//editar Usuario
     public void editarUsuario(@PathVariable Long idUsuario, @RequestBody EditarUsuarioDto editarUsuarioDto){
 
         Usuario usuario = usuarioRepository.findById(idUsuario).get();
@@ -78,6 +86,7 @@ public class UsuarioController {
 
 
     }
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/delete/{idUsuario}")
     public void deletarUsuario(@PathVariable Long idUsuario){
@@ -89,8 +98,20 @@ public class UsuarioController {
             throw new Error("Usuario pertence a algum time ou tarefa");
         }
     }
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Transactional
+    @PostMapping("/teste/{idUsuario}/{idRoles}")//Editar função do usuario
+    public void editarPapelUsuario(@PathVariable Long idUsuario, @PathVariable Long idRoles , @RequestBody EditarUsuarioDto editarUsuarioDto){
 
+        Usuario usuario = usuarioRepository.findById(idUsuario).get();
+        usuario.getRoles().clear();
+        usuarioRepository.save(usuario);
 
+        Roles roles = rolesRepository.findById(idRoles).get();
+        usuario.getRoles().add(roles);
+
+        usuarioRepository.save(usuario);
+    }
 
 //    @GetMapping("/home/{idUsuario}")
 //    public List<Object> usuario(@PathVariable Long idUsuario){

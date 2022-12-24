@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,7 @@ public class TimeController {
     @Autowired
     UsuarioRepository usuarioRepository;
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/criar")// criar o time
     public void criarTime(@RequestBody TimeDTO timeDTO){
         Time time = new Time();
@@ -41,6 +43,7 @@ public class TimeController {
         return timeRepository.findAll(paginacao).map(TimeDTO::new);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/alocar/{idUsuario}/{idTime}")//alocar usuario no time
     public void salvarUsuarioETime(@PathVariable Long idUsuario, @PathVariable Long idTime){
@@ -52,6 +55,7 @@ public class TimeController {
         timeRepository.save(time);
 
     }
+    @PreAuthorize("hasRole('ROLE_ADMIN)")
     @Transactional
     @PostMapping("/remover/usuario/time/{idUsuario}/{idTime}")//removendo o usuario daquele time
     public void removerUsuarioDoTime(@PathVariable Long idUsuario, @PathVariable Long idTime){
@@ -68,7 +72,8 @@ public class TimeController {
 
     }
 
-    @GetMapping("/lista/usuario/{idTime}")//Lista Usuarios de um determinado Time
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
+    @GetMapping("/lista/usuario/{idTime}")//Listar Usuarios de um determinado Time
     public List<UsuarioDTO> listasUsuario (@PathVariable Long idTime){
         Time time = timeRepository.findById(idTime).get();
 
@@ -76,7 +81,7 @@ public class TimeController {
 
     }
 
-
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/deleta/{idTime}")//remover o time
     public void deletaTime(@PathVariable Long idTime){

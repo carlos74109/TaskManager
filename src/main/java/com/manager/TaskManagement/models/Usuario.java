@@ -3,6 +3,7 @@ package com.manager.TaskManagement.models;
 import com.fasterxml.jackson.annotation.*;
 import com.manager.TaskManagement.Enuns.PapelUsuario;
 import com.manager.TaskManagement.dto.ConsultaListaObjetosDTo.ConsultaTimeEmUsuarioDTO;
+import com.manager.TaskManagement.dto.DtoEditar.EditarStatusUsuarioDto;
 import com.manager.TaskManagement.dto.DtoEditar.EditarUsuarioDto;
 import com.manager.TaskManagement.dto.TarefasDTO;
 import com.manager.TaskManagement.dto.UsuarioDTO;
@@ -12,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import javax.persistence.*;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @JsonIdentityInfo(
@@ -36,7 +38,7 @@ public class Usuario implements UserDetails {
     @ManyToMany
     @JoinTable(name = "usuario_roles", joinColumns = @JoinColumn(name = "usuario_id"),
     inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private List<Roles> roles;
+    private Set<Roles> roles;
 
     @OneToMany(mappedBy = "usuarioTimeTarefa")
     private List<Tarefas> listasTarefas;
@@ -93,11 +95,11 @@ public class Usuario implements UserDetails {
         this.usuarioTimes = usuarioTimes;
     }
 
-    public List<Roles> getRoles() {
+    public Set<Roles> getRoles() {
         return roles;
     }
 
-    public void setRoles(List<Roles> roles) {
+    public void setRoles(Set<Roles> roles) {
         this.roles = roles;
     }
 
@@ -167,4 +169,10 @@ public class Usuario implements UserDetails {
             this.email = editarUsuarioDto.email();
         }
     }
+
+//    public void converterPapaelUsuario(EditarStatusUsuarioDto editarStatusUsuarioDto) {
+//        if(editarStatusUsuarioDto != null){
+//            this.
+//        }
+//    }
 }
