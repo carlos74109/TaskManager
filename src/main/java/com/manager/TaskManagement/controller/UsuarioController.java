@@ -83,7 +83,7 @@ public class UsuarioController {
         }
         return null;
     }
-
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
     @PostMapping("/editar/{idUsuario}")//editar Usuario
     public ResponseEntity editarUsuario(@PathVariable Long idUsuario, @RequestBody EditarUsuarioDto editarUsuarioDto){
@@ -131,24 +131,16 @@ public class UsuarioController {
             return new ResponseEntity(HttpStatus.OK);
         }
     }
+    @PreAuthorize("hasRole('ROLE_MASTER')")
+    @PostMapping("/master/{idUsuario}")//
+    public ResponseEntity alocarUsuarioAdminMaster(@PathVariable Long idUsuario){
+        Roles role = rolesRepository.findById(1l).get();
+        Usuario usuario = usuarioRepository.findById(idUsuario).get();
+        usuario.getRoles().clear();
+        usuario.getRoles().add(role);
 
-//    public void criarUsuarioAdminMaster(Long idUsuario, @RequestBody UsuarioDTO usuarioDTO){
-//        Roles role = rolesRepository.findById(1l).get();
-//
-//        Usuario usuario = new Usuario();
-//        Usuario emailExiste = usuarioRepository.findByEmail(usuarioDTO.email());
-//
-//        usuario.atualizarDto(usuarioDTO);
-//        usuario.setSenha(criptografia().encode(usuario.getSenha()));
-//        usuarioRepository.save(usuario);
-//
-//    }
-
-//    @GetMapping("/home/{idUsuario}")
-//    public List<Object> usuario(@PathVariable Long idUsuario){
-//
-//    }
-
-
+        usuarioRepository.save(usuario);
+        return new ResponseEntity(HttpStatus.OK);
+    }
 
 }

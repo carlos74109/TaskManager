@@ -8,7 +8,9 @@ import com.manager.TaskManagement.dto.UsuarioDTO;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
+import javax.xml.crypto.Data;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,10 +35,11 @@ public class Tarefas {
     @JoinColumn(name = "usuario_id")
     private Usuario usuarioTimeTarefa;
     private float tempoPrevistoTarefa;
-    private LocalDateTime dataCriacao;
-    private LocalDateTime dataAtualizacao;
+    private Date dataCriacao;
+    private Date dataFinalizacao;
+    private Date dataAtualizacao;
 
-    public Tarefas(String tituloTarefa, StatusTarefa statusTarefa, String descricaoTarefa, Usuario menbroTimeTarefa, float tempoPrevistoTarefa, LocalDateTime dataCriacao, LocalDateTime dataAtualizacao) {
+    public Tarefas(String tituloTarefa, StatusTarefa statusTarefa, String descricaoTarefa, Usuario menbroTimeTarefa, float tempoPrevistoTarefa, Date dataCriacao, Date dataAtualizacao) {
         this.tituloTarefa = tituloTarefa;
         this.statusTarefa = statusTarefa;
         this.descricaoTarefa = descricaoTarefa;
@@ -47,6 +50,14 @@ public class Tarefas {
     }
 
     public Tarefas() {
+    }
+
+    public Date getDataFinalizacao() {
+        return dataFinalizacao;
+    }
+
+    public void setDataFinalizacao(Date dataFinalizacao) {
+        this.dataFinalizacao = dataFinalizacao;
     }
 
     public String getDescricaoTarefa() {
@@ -93,15 +104,15 @@ public class Tarefas {
         this.tempoPrevistoTarefa = tempoPrevistoTarefa;
     }
 
-    public LocalDateTime getDataCriacao() {
+    public Date getDataCriacao() {
         return dataCriacao;
     }
 
-    public void setDataCriacao(LocalDateTime dataCriacao) {
+    public void setDataCriacao(Date dataCriacao) {
         this.dataCriacao = dataCriacao;
     }
 
-    public LocalDateTime getDataAtualizacao() {
+    public Date getDataAtualizacao() {
         return dataAtualizacao;
     }
 
@@ -113,14 +124,14 @@ public class Tarefas {
         this.projeto_id = projeto_id;
     }
 
-    public void setDataAtualizacao(LocalDateTime dataAtualizacao) {
+    public void setDataAtualizacao(Date dataAtualizacao) {
         this.dataAtualizacao = dataAtualizacao;
     }
 
     public void criarTarefaDto(TarefasDTO tarefasDTO) {
-        this.dataCriacao = LocalDateTime.now();
+        this.dataCriacao = new Date();
         this.tituloTarefa = tarefasDTO.tituloTarefa();
-        this.statusTarefa = tarefasDTO.statusTarefa();
+        setStatusTarefa(StatusTarefa.FAZER);
         this.descricaoTarefa = tarefasDTO.descricaoTarefa();
 
     }
