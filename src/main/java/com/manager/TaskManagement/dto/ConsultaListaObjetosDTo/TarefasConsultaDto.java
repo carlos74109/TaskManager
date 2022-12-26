@@ -6,11 +6,12 @@ import com.manager.TaskManagement.models.Tarefas;
 import com.manager.TaskManagement.models.Usuario;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 public record TarefasConsultaDto(String tituloTarefa,
                                  StatusTarefa statusTarefa,
                                  String descricaoTarefa,
-                                 LocalDateTime dataCriacao,
+                                 Date dataCriacao,
 
                                  UsuarioDTO usuarioDTO) {
     public TarefasConsultaDto(Tarefas tarefas){
