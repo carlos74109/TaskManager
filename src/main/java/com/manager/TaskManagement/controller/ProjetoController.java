@@ -12,16 +12,21 @@ import com.manager.TaskManagement.repository.UsuarioRepository;
 import com.manager.TaskManagement.repository.ProjetoRepository;
 import com.manager.TaskManagement.repository.TarefasRepository;
 import com.manager.TaskManagement.repository.TimeRepository;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.awt.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +45,12 @@ public class ProjetoController {
     TimeRepository timeRepository;
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @PostMapping("/criar")// criar o projeto
     public ResponseEntity criarPjeto(@RequestBody ProjetoDTO projetoDTO){
         Time time = timeRepository.findById(0l).get();
@@ -54,16 +65,34 @@ public class ProjetoController {
     }
 
     @GetMapping("/listas")
-    public List<ConsultaProjetoTarefaTime> listasProjeto(@PageableDefault(size = 10) Pageable paginacao) {
-        return projetoRepository.findAll(paginacao).stream().map(ConsultaProjetoTarefaTime::new).collect(Collectors.toList());
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
+    public ResponseEntity listasProjeto(@PageableDefault(size = 10) Pageable paginacao) {
+        return ResponseEntity.ok(projetoRepository.findAll(paginacao).stream().map(ConsultaProjetoTarefaTime::new).collect(Collectors.toList()));
     }
 
     @GetMapping("/listas/a")
-    public List<Projeto> listasProjetos() {
-        return projetoRepository.findAll();
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
+    public ResponseEntity listasProjetos() {
+        return ResponseEntity.ok(projetoRepository.findAll());
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @Transactional
     @PostMapping("/alocar/time/{idTime}/{idProjeto}")//alocar time ao projeto
     public ResponseEntity alocarTime(@PathVariable Long idTime, @PathVariable Long idProjeto){
@@ -80,6 +109,12 @@ public class ProjetoController {
     }
 
     @PreAuthorize("hasRole('ROLE_GESTOR')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @Transactional
     @PostMapping("/tarefa/adicionar/{idProjeto}/{idTarefa}/{idMembro}")//adicionar tarefa ao usuario
     public ResponseEntity editarProjeto (@PathVariable Long idProjeto, @PathVariable Long idTarefa, @PathVariable Long idMembro){
@@ -99,6 +134,12 @@ public class ProjetoController {
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @Transactional
     @PostMapping("/editar/{idProjeto}")//Editar atributos de projeto
     public ResponseEntity editarProjeto(@PathVariable Long idProjeto, @RequestBody EditarProjetoDto editarProjetoDto){
@@ -115,6 +156,12 @@ public class ProjetoController {
     }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Transactional
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema intero")
     @PostMapping("/deleta/{idProjeto}")//Deleta Projeto
     public ResponseEntity removerProjeto(@PathVariable Long idProjeto){
 

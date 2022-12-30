@@ -24,7 +24,7 @@ public interface TarefasRepository extends JpaRepository<Tarefas, Long> {
 
     @Query("SELECT t.tituloTarefa, t.statusTarefa, t.descricaoTarefa, t.dataCriacao FROM tarefas t WHERE t.projeto_id.idProjeto= ?1 and t.usuarioTimeTarefa IS NULL")
     Page<Tarefas> findByProjetoComUsuarioNull(Long id, Pageable paginacao);//Trazer todas as tarefas de um determinado Projeto com usuarios NÃO setados
-    @Query("SELECT t.tituloTarefa, t.statusTarefa, t.descricaoTarefa, t.usuarioTimeTarefa.nomeUsuario, t.usuarioTimeTarefa.email, t.dataCriacao FROM tarefas t WHERE t.statusTarefa= ?1 AND t.projeto_id.idProjeto= ?2")
+    @Query("SELECT t.tituloTarefa, t.statusTarefa, t.descricaoTarefa, t.dataCriacao FROM tarefas t WHERE t.statusTarefa= ?1 AND t.projeto_id.idProjeto= ?2")
     Page<Tarefas> findByStatusTarefaFazer(StatusTarefa valueOf, Long idProjeto, Pageable paginacao);//Trazer todas as tarefas com seu determinado Status
 
     @Query("SELECT t.tituloTarefa, t.statusTarefa, t.descricaoTarefa, t.usuarioTimeTarefa.nomeUsuario, t.usuarioTimeTarefa.email, t.dataCriacao, t.dataAtualizacao FROM tarefas t WHERE t.statusTarefa= ?1 AND t.projeto_id.idProjeto= ?2")

@@ -8,6 +8,7 @@ import com.manager.TaskManagement.models.Usuario;
 import com.manager.TaskManagement.models.Time;
 import com.manager.TaskManagement.repository.UsuarioRepository;
 import com.manager.TaskManagement.repository.TimeRepository;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,12 @@ public class TimeController {
     UsuarioRepository usuarioRepository;
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @PostMapping("/criar")// criar o time
     public ResponseEntity criarTime(@RequestBody TimeDTO timeDTO){
         Time time = new Time();
@@ -42,6 +49,12 @@ public class TimeController {
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @Transactional
     @PostMapping("/alocar/{idUsuario}/{idTime}")//alocar usuario no time
     public ResponseEntity salvarUsuarioETime(@PathVariable Long idUsuario, @PathVariable Long idTime){
@@ -59,6 +72,12 @@ public class TimeController {
         }
     }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @Transactional
     @PostMapping("/remover/usuario/time/{idUsuario}/{idTime}")//removendo o usuario daquele time
     public ResponseEntity removerUsuarioDoTime(@PathVariable Long idUsuario, @PathVariable Long idTime){
@@ -75,14 +94,26 @@ public class TimeController {
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @GetMapping("/lista/usuario/{idTime}")//Listar Usuarios de um determinado Time
-    public List<UsuarioDTO> listasUsuario (@PathVariable Long idTime){
+    public ResponseEntity listasUsuario (@PathVariable Long idTime){
         Time time = timeRepository.findById(idTime).get();
 
-        return time.getTimesUsuarios().stream().map(UsuarioDTO::new).collect(Collectors.toList());
+        return ResponseEntity.ok(time.getTimesUsuarios().stream().map(UsuarioDTO::new).collect(Collectors.toList()));
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @Transactional
     @PostMapping("/deleta/{idTime}")//remover o time
     public ResponseEntity deletaTime(@PathVariable Long idTime){

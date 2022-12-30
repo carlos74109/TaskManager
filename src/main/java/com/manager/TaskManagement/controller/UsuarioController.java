@@ -12,6 +12,7 @@ import com.manager.TaskManagement.repository.ProjetoRepository;
 import com.manager.TaskManagement.repository.RolesRepository;
 import com.manager.TaskManagement.repository.TarefasRepository;
 import com.manager.TaskManagement.repository.UsuarioRepository;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,9 +45,15 @@ public class UsuarioController {
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR', 'ROLE_COMUM')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @Transactional
     @PostMapping("/criar")//criar usuario
-    public ResponseEntity criarUsuario(@RequestBody UsuarioDTO usuarioDTO){
+    public ResponseEntity<Usuario> criarUsuario(@RequestBody UsuarioDTO usuarioDTO){
         Usuario usuario = new Usuario();
         Usuario emailExiste = usuarioRepository.findByEmail(usuarioDTO.email());
 
@@ -61,12 +68,18 @@ public class UsuarioController {
 
             usuarioRepository.save(usuario);
 
-            return new ResponseEntity(HttpStatus.OK);
+            return ResponseEntity.ok().build();
         }
     }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @GetMapping("/listas/{status}")// pesquisar usuarios de acordo com os status do usuario
-    public List<UsuarioConsultaDTO> listasDeMembros(@PathVariable String status){
+    public ResponseEntity listasDeMembros(@PathVariable String status){
         List<UsuarioConsultaDTO> membros = null;
 
         switch (status){
@@ -74,16 +87,22 @@ public class UsuarioController {
                 membros = usuarioRepository.findByPapelUsuario(PapelUsuario.valueOf(status.toUpperCase()))
                         .stream().map(UsuarioConsultaDTO::new)
                         .collect(Collectors.toList());
-                return membros;
+                return ResponseEntity.ok(membros);
 
         }
         if(status.equals("todos")){
             membros = usuarioRepository.findAll().stream().map(UsuarioConsultaDTO::new).collect(Collectors.toList());
-            return membros;
+            return ResponseEntity.ok(membros);
         }
         return null;
     }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @Transactional
     @PostMapping("/editar/{idUsuario}")//editar Usuario
     public ResponseEntity editarUsuario(@PathVariable Long idUsuario, @RequestBody EditarUsuarioDto editarUsuarioDto){
@@ -99,6 +118,12 @@ public class UsuarioController {
 
     }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @Transactional
     @PostMapping("/delete/{idUsuario}")
     public ResponseEntity deletarUsuario(@PathVariable Long idUsuario){// deletar usuario
@@ -113,6 +138,12 @@ public class UsuarioController {
         }
     }
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @Transactional
     @PostMapping("/teste/{idUsuario}/{idRoles}")//Editar função do usuario
     public ResponseEntity editarPapelUsuario(@PathVariable Long idUsuario, @PathVariable Long idRoles){
@@ -132,6 +163,12 @@ public class UsuarioController {
         }
     }
     @PreAuthorize("hasRole('ROLE_MASTER')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @PostMapping("/master/{idUsuario}")//
     public ResponseEntity alocarUsuarioAdminMaster(@PathVariable Long idUsuario){
         Roles role = rolesRepository.findById(1l).get();
