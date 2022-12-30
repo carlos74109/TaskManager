@@ -12,17 +12,21 @@ import com.manager.TaskManagement.models.Usuario;
 import com.manager.TaskManagement.repository.ProjetoRepository;
 import com.manager.TaskManagement.repository.TarefasRepository;
 import com.manager.TaskManagement.repository.UsuarioRepository;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.util.UriComponentsBuilder;
 import javax.websocket.server.PathParam;
+import java.net.URI;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -42,8 +46,14 @@ public class TarefaController {
     ProjetoRepository projetoRepository;
 
     @PreAuthorize("hasRole('ROLE_GESTOR')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @PostMapping("/criar/{idProjeto}")//criar tarefas
-    public ResponseEntity criarTarefas(@RequestBody TarefasDTO tarefasDTO, @PathVariable Long idProjeto){
+    public ResponseEntity<Tarefas> criarTarefas(@RequestBody TarefasDTO tarefasDTO, @PathVariable Long idProjeto){
         try {
             if(projetoRepository.findById(idProjeto).isEmpty()){
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -54,33 +64,52 @@ public class TarefaController {
                 tarefa.criarTarefaDto(tarefasDTO);
                 tarefa.setProjeto_id(projeto);
                 tarefasRepository.save(tarefa);
-                return new ResponseEntity(HttpStatus.OK);
+
+                return ResponseEntity.ok().build();
             }
         }catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().build();
         }
 
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @GetMapping("/listas/projetos/{idProjeto}")//trazer todas as tarefas de um determinado Projeto
-    public Page<Tarefas> listasTarefas(@PageableDefault(size = 10) Pageable paginacao, @PathVariable Long idProjeto){
+    public ResponseEntity listasTarefas(@PageableDefault(size = 10) Pageable paginacao, @PathVariable Long idProjeto){
         if(projetoRepository.findById(idProjeto).isEmpty()){
             throw new Error("Projeto inexistente");
         }
 
         Page<Tarefas> listasTarefa = tarefasRepository.findByProjeto(idProjeto, paginacao);
-        return listasTarefa;
+        return ResponseEntity.ok(listasTarefa);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR', 'ROLE_COMUM')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema intero")
     @GetMapping("/listas/usuario/{idUsuario}")//encontrar todas as tarefas de um determinado Usuario
-    public Page<Tarefas> listasDeTarefaUsurario(@PageableDefault(size = 10) Pageable paginacao, @PathVariable Long idUsuario){
+    public ResponseEntity listasDeTarefaUsurario(@PageableDefault(size = 10) Pageable paginacao, @PathVariable Long idUsuario){
 
-        return tarefasRepository.findByTarefaUsuario(idUsuario, paginacao);
+        return ResponseEntity.ok(tarefasRepository.findByTarefaUsuario(idUsuario, paginacao));
     }
 
     @PreAuthorize("hasRole('ROLE_GESTOR')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @Transactional
     @PostMapping("/usuario/{idUsuario}/{idTarefa}")//encontrar o usuario e adicionar a tarefa
     public ResponseEntity addTarefaParaUsuario(@PathVariable Long idUsuario, @PathVariable Long idTarefa){
@@ -98,6 +127,12 @@ public class TarefaController {
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR', 'ROLE_COMUM')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @Transactional
     @PostMapping("/editar/{idTarefas}")// editar os atributos das tarefas
     public ResponseEntity editarTarefa(@PathVariable Long idTarefas, @RequestBody EditarTarefaDto editarTarefaDto) throws ParseException {
@@ -122,6 +157,12 @@ public class TarefaController {
         }
     }
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @PostMapping("/deletar/{id}")//deleta tarefa
     public ResponseEntity deletaTarefa (@PathVariable Long idTarefa){
 
@@ -135,37 +176,55 @@ public class TarefaController {
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @GetMapping("/listas/{idProjeto}/{status}")// pesquisar Tarefas de acordo com os status
-    public Page<Tarefas> listasDeStatusTarefa(@PathVariable String status, @PathVariable Long idProjeto , @PageableDefault(size = 10) Pageable paginacao){
+    public ResponseEntity listasDeStatusTarefa(@PathVariable String status, @PathVariable Long idProjeto , @PageableDefault(size = 10) Pageable paginacao){
 
         if(status.equals("fazer")){
-            return  tarefasRepository.findByStatusTarefaFazer(StatusTarefa.valueOf(status.toUpperCase()), idProjeto, paginacao);
+            return ResponseEntity.ok(tarefasRepository.findByStatusTarefaFazer(StatusTarefa.valueOf(status.toUpperCase()), idProjeto, paginacao));
         }
         if(status.equals("fazendo")){
-            return  tarefasRepository.findByStatusTarefaFazendo(StatusTarefa.valueOf(status.toUpperCase()), idProjeto, paginacao);
+            return  ResponseEntity.ok(tarefasRepository.findByStatusTarefaFazendo(StatusTarefa.valueOf(status.toUpperCase()), idProjeto, paginacao));
         }
         if(status.equals("feito")){
-            return  tarefasRepository.findByStatusTarefaFeito(StatusTarefa.valueOf(status.toUpperCase()), idProjeto, paginacao);
+            return  ResponseEntity.ok(tarefasRepository.findByStatusTarefaFeito(StatusTarefa.valueOf(status.toUpperCase()), idProjeto, paginacao));
         }
         if(status.equals("todos")){
-            return tarefasRepository.findAll(paginacao);
+            return ResponseEntity.ok(tarefasRepository.findAll(paginacao));
         }
         return null;
     }
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @GetMapping("/listas/{idProjeto}/nulo")// pesquisar Tarefas de acordo com os status FAZER onde o ususario é Null
-    public Page<Tarefas> listasDeStatusTarefaUsuarioNull(@PathVariable Long idProjeto, @PageableDefault(size = 10) Pageable paginacao){
-        return  tarefasRepository.findByStatusTarefaNull(StatusTarefa.FAZER,idProjeto, paginacao);
+    public ResponseEntity listasDeStatusTarefaUsuarioNull(@PathVariable Long idProjeto, @PageableDefault(size = 10) Pageable paginacao){
+        return ResponseEntity.ok(tarefasRepository.findByStatusTarefaNull(StatusTarefa.FAZER,idProjeto, paginacao));
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_GESTOR')")
+    @ApiResponse(responseCode = "200", description = "Sucesso")
+    @ApiResponse(responseCode = "400", description = "Má requisição")
+    @ApiResponse(responseCode = "401", description = "Não autorizado")
+    @ApiResponse(responseCode = "403", description = "Acesso negado")
+    @ApiResponse(responseCode = "404", description = "Pagina não encontrado")
+    @ApiResponse(responseCode = "500", description = "Problema interno")
     @GetMapping("/listas/projetos/null/{idProjeto}")//trazer todas as tarefas de um determinado Projeto onde o usuario é null
-    public Page<Tarefas> listasTarefasUsuarioNull(@PageableDefault(size = 10) Pageable paginacao, @PathVariable Long idProjeto){
+    public ResponseEntity listasTarefasUsuarioNull(@PageableDefault(size = 10) Pageable paginacao, @PathVariable Long idProjeto){
         if(projetoRepository.findById(idProjeto).isEmpty()){
             throw new Error("Projeto inexistente");
         }
 
         Page<Tarefas> listasTarefa = tarefasRepository.findByProjetoComUsuarioNull(idProjeto, paginacao);
-        return listasTarefa;
+        return ResponseEntity.ok(listasTarefa);
     }
 }
